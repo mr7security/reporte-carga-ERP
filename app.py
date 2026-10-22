@@ -99,8 +99,8 @@ PAGE_HTML = """<!doctype html><html lang=es><head><meta charset=utf-8>
  #clock{font-size:.85rem;color:var(--text);font-variant-numeric:tabular-nums}
  #servidor{font-size:.72rem;color:var(--muted);margin-top:2px}
  #servidor:not(:empty)::before{content:"🖥 "}
- .hr{display:flex;align-items:center;gap:20px;margin-left:auto}
- a.salir{color:var(--muted);font-size:.78rem;text-decoration:none;text-transform:uppercase;letter-spacing:.03em}
+ .hr{margin-left:auto;text-align:right}
+ a.salir{display:inline-block;margin-top:5px;color:var(--muted);font-size:.72rem;text-decoration:none;text-transform:uppercase;letter-spacing:.03em}
  a.salir:hover{color:var(--accent)}
  .panel{background:var(--card);border-radius:16px;padding:16px 18px;margin-bottom:16px;border-top:4px solid var(--accent)}
  .panel h2{font-size:.95rem;margin:0 0 14px;text-transform:uppercase;letter-spacing:.03em;color:var(--accent)}
@@ -132,8 +132,8 @@ PAGE_HTML = """<!doctype html><html lang=es><head><meta charset=utf-8>
   <h1>Previsión de <span>Carga</span></h1>
  </div>
  <div class=hr>
-  <a class=salir href="{{url_for('logout')}}">Salir</a>
   <div id=reloj-box><div id=clock>--</div><div id=servidor>ERP ATENEA2 · GRUPO</div></div>
+  <a class=salir href="{{url_for('logout')}}">Salir</a>
  </div>
 </header>
 
