@@ -99,8 +99,9 @@ PAGE_HTML = """<!doctype html><html lang=es><head><meta charset=utf-8>
  #clock{font-size:.85rem;color:var(--text);font-variant-numeric:tabular-nums}
  #servidor{font-size:.72rem;color:var(--muted);margin-top:2px}
  #servidor:not(:empty)::before{content:"🖥 "}
- header a.salir{color:var(--muted);font-size:.78rem;text-decoration:none;text-transform:uppercase;letter-spacing:.03em;align-self:center}
- header a.salir:hover{color:var(--accent)}
+ .hr{display:flex;align-items:center;gap:20px;margin-left:auto}
+ a.salir{color:var(--muted);font-size:.78rem;text-decoration:none;text-transform:uppercase;letter-spacing:.03em}
+ a.salir:hover{color:var(--accent)}
  .panel{background:var(--card);border-radius:16px;padding:16px 18px;margin-bottom:16px;border-top:4px solid var(--accent)}
  .panel h2{font-size:.95rem;margin:0 0 14px;text-transform:uppercase;letter-spacing:.03em;color:var(--accent)}
  .panel h2 .right{float:right}
@@ -130,8 +131,10 @@ PAGE_HTML = """<!doctype html><html lang=es><head><meta charset=utf-8>
   <img id=logo src="/logo" alt="" onload="this.style.display='block'">
   <h1>Previsión de <span>Carga</span></h1>
  </div>
- <div id=reloj-box><div id=clock>--/--/---- --:--:--</div><div id=servidor>ERP ATENEA2 · GRUPO</div></div>
- <a class=salir href="{{url_for('logout')}}">Salir</a>
+ <div class=hr>
+  <a class=salir href="{{url_for('logout')}}">Salir</a>
+  <div id=reloj-box><div id=clock>--</div><div id=servidor>ERP ATENEA2 · GRUPO</div></div>
+ </div>
 </header>
 
  <div class=panel>
@@ -167,8 +170,11 @@ PAGE_HTML = """<!doctype html><html lang=es><head><meta charset=utf-8>
 
 <footer>SGP — Departamento IT</footer>
 <script>
-function tic(){const d=new Date();const p=n=>String(n).padStart(2,'0');
- document.getElementById('clock').textContent=`${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;}
+const DIAS_SEM=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+const MESES_ES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+function fmtReloj(d){const p=n=>String(n).padStart(2,"0");
+ return `${DIAS_SEM[d.getDay()]}, ${d.getDate()} de ${MESES_ES[d.getMonth()]} de ${d.getFullYear()}, ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;}
+function tic(){document.getElementById('clock').textContent=fmtReloj(new Date());}
 setInterval(tic,1000);tic();
 let cfg = {{cfg_json|safe}};
 function render(){
