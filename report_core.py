@@ -107,11 +107,11 @@ ROW_A="#fbfbe8"; ROW_B="#ffffff"
 
 def th(txt, bg, color=HEAD_TXT, span=1, align="center"):
     return (f'<th colspan="{span}" style="background:{bg};color:{color};border:1px solid {BORDER};'
-            f'padding:4px 8px;font:bold 12px Segoe UI,Arial;text-align:{align};">{txt}</th>')
+            f'padding:3px 6px;font:bold 11px Segoe UI,Arial;text-align:{align};">{txt}</th>')
 def td(txt, bg=ROW_B, align="right", bold=False):
     w = "bold" if bold else "normal"
-    return (f'<td style="background:{bg};color:#1f2937;border:1px solid {BORDER};padding:3px 8px;'
-            f'font:{w} 12px Segoe UI,Arial;text-align:{align};white-space:nowrap;">{txt}</td>')
+    return (f'<td style="background:{bg};color:#1f2937;border:1px solid {BORDER};padding:2px 6px;'
+            f'font:{w} 11px Segoe UI,Arial;text-align:{align};white-space:nowrap;">{txt}</td>')
 
 def _grid(data):
     prep = [("M2P","M2",fm2),("PzP","Pz",fpz),("UdP","Ud",fpz),("PcP","PC",fpz),
@@ -253,11 +253,14 @@ def build_html(data, full=True, datos_act=None):
         '<p style="text-align:center;font:12px Segoe UI,Arial;color:#777;margin:0;">'
         f'Para modificar las reglas de envío, <a href="{dash_url}" style="color:#3b82f6;text-decoration:none;font-weight:600;">pulse aquí</a>.</p>'
     )
-    inner = f'{header}{tables}{footer}'
+    # Las tablas van en un contenedor con scroll horizontal para que no desborden en móvil.
+    tablas_scroll = f'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">{tables}</div>'
+    inner = f'{header}{tablas_scroll}{footer}'
     if not full:
         return inner
-    return (f'<!doctype html><html><body style="margin:0;padding:16px;background:#f0f0f0;">'
-            f'<div style="max-width:1150px;margin:auto;background:#fff;padding:18px 20px;border:1px solid {BORDER};">'
+    return (f'<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+            f'<body style="margin:0;padding:12px;background:#f0f0f0;">'
+            f'<div style="max-width:1150px;width:100%;box-sizing:border-box;margin:auto;background:#fff;padding:16px;border:1px solid {BORDER};">'
             f'{inner}'
             f'</div></body></html>')
 
