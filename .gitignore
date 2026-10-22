@@ -1,0 +1,19 @@
+# Secretos y entorno
+.env
+.venv/
+__pycache__/
+*.pyc
+
+# Estado y salidas en runtime (se generan solos)
+config.json
+state.json
+salidas/
+
+# Ficheros de prueba / scratch (no forman parte de la app)
+report.py
+dump.py
+test_conexion.py
+datos.json
+preview*.html
+*.b64
+*.tgz

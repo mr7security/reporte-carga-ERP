@@ -1,0 +1,10 @@
+[Unit]
+Description=Dispara el reporte Previsión de Carga cada día
+
+[Timer]
+# Cambia la hora a tu gusto (hora del servidor). Ej: 07:30 todos los días.
+OnCalendar=*-*-* 07:30:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=Dashboard Previsión de Carga (visor + control de envío)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=mr7
+WorkingDirectory=/home/mr7/reporte-carga
+ExecStart=/home/mr7/reporte-carga/.venv/bin/python /home/mr7/reporte-carga/app.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
