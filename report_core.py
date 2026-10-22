@@ -227,7 +227,11 @@ def build_html(data, full=True, datos_act=None):
         datos_act = dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     tables = _tables(data, datos_act)
     now = dt.datetime.now()
-    fecha = now.strftime("%d/%m/%Y"); hora = now.strftime("%H:%M")
+    DIAS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]
+    MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto",
+             "septiembre","octubre","noviembre","diciembre"]
+    fecha_larga = (f"{DIAS[now.weekday()]}, {now.day} de {MESES[now.month-1]} "
+                   f"de {now.year}, {now.strftime('%H:%M:%S')}")
     dash_url = env("DASHBOARD_URL", "http://10.50.69.121:8070")
 
     logo = _logo_src()
@@ -240,7 +244,7 @@ def build_html(data, full=True, datos_act=None):
         '<td style="width:40%;text-align:center;vertical-align:middle;">'
         '<span style="font:bold 20px Segoe UI,Arial;color:#2a4a6a;text-transform:uppercase;letter-spacing:.04em;">Previsión de Carga</span></td>'
         '<td style="width:30%;text-align:right;vertical-align:middle;font:12px Segoe UI,Arial;color:#777;">'
-        f'Generado<br><b style="color:#444;font-size:13px;">{fecha}</b> · {hora}</td>'
+        f'Generado<br><b style="color:#444;">{fecha_larga}</b></td>'
         '</tr></table>'
     )
     footer = (
