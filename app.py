@@ -217,9 +217,11 @@ async function post(cfg){
   return r.json();
 }
 async function saveCfg(){collect();const j=await post(cfg);cfg=j.config;render();flash('cfgmsg','Guardado ✓');}
-async function addMail(){const e=document.getElementById('newmail').value.trim();if(!e)return;
-  cfg.recipients=cfg.recipients||[];cfg.recipients.push({email:e,active:true});
-  document.getElementById('newmail').value='';const j=await post(cfg);cfg=j.config;render();}
+async function addMail(){const inp=document.getElementById('newmail');const e=inp.value.trim();if(!e)return;
+  if(!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(e)){flash('sendmsg','Correo no válido');return;}
+  cfg.recipients=cfg.recipients||[];
+  if(cfg.recipients.some(r=>r.email.toLowerCase()===e.toLowerCase())){flash('sendmsg','Ese correo ya está en la lista');return;}
+  cfg.recipients.push({email:e,active:true});inp.value='';const j=await post(cfg);cfg=j.config;render();flash('sendmsg','Añadido ✓');}
 async function toggle(i){cfg.recipients[i].active=!cfg.recipients[i].active;const j=await post(cfg);cfg=j.config;render();}
 async function del(i){cfg.recipients.splice(i,1);const j=await post(cfg);cfg=j.config;render();}
 async function sendNow(){flash('sendmsg','Enviando…');
@@ -269,11 +271,13 @@ def api_config():
     for k in ("enabled","send_time","pause_until","subject","recipients"):
         if k in incoming:
             cfg[k] = incoming[k]
-    # saneado mínimo de recipients
-    clean = []
+    # saneado + deduplicado (sin distinguir mayúsculas/minúsculas)
+    clean, seen = [], set()
     for r in cfg.get("recipients", []):
         em = (r.get("email") or "").strip()
-        if em and "@" in em:
+        key = em.lower()
+        if em and "@" in em and key not in seen:
+            seen.add(key)
             clean.append({"email": em, "active": bool(r.get("active", True))})
     cfg["recipients"] = clean
     save_config(cfg)
