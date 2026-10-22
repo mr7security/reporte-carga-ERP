@@ -208,21 +208,53 @@ def _tables(data, datos_act):
     ha += "</table>"
     return grid + carga + hp + ha
 
+def _logo_src():
+    """Logo de static/ incrustado como data URI (para que se vea también en el correo)."""
+    import glob, base64, mimetypes
+    base = os.path.dirname(os.path.abspath(__file__))
+    for ext in ("png", "svg", "jpg", "jpeg", "webp"):
+        hits = glob.glob(os.path.join(base, "static", f"logo.{ext}"))
+        if hits:
+            mime = mimetypes.guess_type(hits[0])[0] or "image/png"
+            with open(hits[0], "rb") as f:
+                b64 = base64.b64encode(f.read()).decode()
+            return f"data:{mime};base64,{b64}"
+    return ""
+
 def build_html(data, full=True, datos_act=None):
     """full=True -> documento completo (email). full=False -> fragmento (dashboard)."""
     if datos_act is None:
         datos_act = dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     tables = _tables(data, datos_act)
-    now = dt.datetime.now().strftime("%d/%m/%Y %H:%M")
-    inner = (f'<h2 style="font:bold 18px Segoe UI,Arial;color:#333;margin:0 0 4px;">Previsión de Carga</h2>'
-             f'<p style="font:12px Segoe UI,Arial;color:#777;margin:0 0 16px;">Generado · {now}</p>'
-             f'{tables}')
+    now = dt.datetime.now()
+    fecha = now.strftime("%d/%m/%Y"); hora = now.strftime("%H:%M")
+    dash_url = env("DASHBOARD_URL", "http://10.50.69.121:8070")
+
+    logo = _logo_src()
+    logo_cell = (f'<img src="{logo}" alt="SGP" style="height:42px;background:#fff;border-radius:6px;padding:3px 7px">'
+                 if logo else '<span style="font:bold 20px Segoe UI,Arial;color:#2a4a6a">SGP</span>')
+    # Cabecera: logo izquierda · título centro · fecha/hora derecha (tabla, robusta en email)
+    header = (
+        '<table style="width:100%;border-collapse:collapse;margin-bottom:18px;"><tr>'
+        f'<td style="width:30%;text-align:left;vertical-align:middle;">{logo_cell}</td>'
+        '<td style="width:40%;text-align:center;vertical-align:middle;">'
+        '<span style="font:bold 20px Segoe UI,Arial;color:#2a4a6a;text-transform:uppercase;letter-spacing:.04em;">Previsión de Carga</span></td>'
+        '<td style="width:30%;text-align:right;vertical-align:middle;font:12px Segoe UI,Arial;color:#777;">'
+        f'Generado<br><b style="color:#444;font-size:13px;">{fecha}</b> · {hora}</td>'
+        '</tr></table>'
+    )
+    footer = (
+        '<p style="text-align:center;font:bold 11px Segoe UI,Arial;color:#8a8a8a;'
+        'letter-spacing:.12em;text-transform:uppercase;margin:20px 0 4px;">SGP — Departamento de IT</p>'
+        '<p style="text-align:center;font:12px Segoe UI,Arial;color:#777;margin:0;">'
+        f'Para modificar las reglas de envío, <a href="{dash_url}" style="color:#3b82f6;text-decoration:none;font-weight:600;">pulse aquí</a>.</p>'
+    )
+    inner = f'{header}{tables}{footer}'
     if not full:
         return inner
     return (f'<!doctype html><html><body style="margin:0;padding:16px;background:#f0f0f0;">'
-            f'<div style="max-width:1150px;margin:auto;background:#fff;padding:18px;border:1px solid {BORDER};">'
+            f'<div style="max-width:1150px;margin:auto;background:#fff;padding:18px 20px;border:1px solid {BORDER};">'
             f'{inner}'
-            f'<p style="font:11px Segoe UI,Arial;color:#999;margin-top:16px;">Reporte automático desde ATENEA2/GRUPO.</p>'
             f'</div></body></html>')
 
 # ---------------------------------------------------------------------------
