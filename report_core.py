@@ -110,7 +110,7 @@ def th(txt, bg, color=HEAD_TXT, span=1, align="center"):
             f'padding:4px 8px;font:bold 12px Segoe UI,Arial;text-align:{align};">{txt}</th>')
 def td(txt, bg=ROW_B, align="right", bold=False):
     w = "bold" if bold else "normal"
-    return (f'<td style="background:{bg};border:1px solid {BORDER};padding:3px 8px;'
+    return (f'<td style="background:{bg};color:#1f2937;border:1px solid {BORDER};padding:3px 8px;'
             f'font:{w} 12px Segoe UI,Arial;text-align:{align};white-space:nowrap;">{txt}</td>')
 
 def _grid(data):

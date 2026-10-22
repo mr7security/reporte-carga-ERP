@@ -120,7 +120,7 @@ PAGE_HTML = """<!doctype html><html lang=es><head><meta charset=utf-8>
  .muted{color:var(--muted);font-size:.75rem}
  .msg{font-size:.8rem;margin-left:10px;color:var(--accent)}
  /* el reporte va en tarjeta blanca (la tabla es clara, como el ERP) */
- .report{overflow:auto;background:#fff;border-radius:10px;padding:14px}
+ .report{overflow:auto;background:#fff;color:#1f2937;border-radius:10px;padding:14px}
  footer{text-align:center;color:var(--muted);font-size:.72rem;letter-spacing:.14em;
    text-transform:uppercase;font-weight:700;margin-top:18px;padding-top:12px;border-top:1px solid #24334a}
  a{color:var(--accent)}
