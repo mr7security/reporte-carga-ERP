@@ -102,19 +102,29 @@ PAGE_HTML = """<!doctype html><html lang=es><head><meta charset=utf-8>
  .hr{margin-left:auto;text-align:right}
  a.salir{display:inline-block;margin-top:5px;color:var(--muted);font-size:.72rem;text-decoration:none;text-transform:uppercase;letter-spacing:.03em}
  a.salir:hover{color:var(--accent)}
- .panel{background:var(--card);border-radius:16px;padding:16px 18px;margin-bottom:16px;border-top:4px solid var(--accent)}
- .panel h2{font-size:.95rem;margin:0 0 14px;text-transform:uppercase;letter-spacing:.03em;color:var(--accent)}
+ :root{--ctl-h:42px}
+ .panel{background:var(--card);border-radius:16px;padding:18px 20px;margin-bottom:16px;border-top:4px solid var(--c,var(--accent))}
+ .panel h2{font-size:.95rem;margin:0 0 16px;text-transform:uppercase;letter-spacing:.03em;color:var(--c,var(--accent))}
  .panel h2 .right{float:right}
+ /* un tono de azul por tarjeta */
+ .panel.p1{--c:#38bdf8}   /* cyan   */
+ .panel.p2{--c:#3b82f6}   /* azul   */
+ .panel.p3{--c:#818cf8}   /* índigo */
  .row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}
- .fld{display:flex;flex-direction:column;font-size:.72rem;gap:4px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
- input,select{padding:9px;border:1px solid #334155;border-radius:8px;font-size:14px;background:var(--card2);color:var(--text)}
- .btn{padding:9px 15px;background:var(--card2);color:var(--text);border:1px solid #334155;border-radius:8px;
-   cursor:pointer;font-size:.82rem;text-transform:uppercase;letter-spacing:.02em}
- .btn:hover{border-color:var(--accent)}
- .btn.alt{background:var(--accent);color:#0f172a;border-color:var(--accent);font-weight:700}
+ .fld{display:flex;flex-direction:column;font-size:.7rem;gap:5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+ input,select{height:var(--ctl-h);padding:0 12px;border:1px solid #334155;border-radius:8px;font-size:14px;
+   background:var(--card2);color:var(--text)}
+ input:focus,select:focus{outline:none;border-color:var(--c,var(--accent))}
+ input#subject{min-width:240px}
+ input#newmail{min-width:260px}
+ .btn{height:var(--ctl-h);padding:0 20px;display:inline-flex;align-items:center;justify-content:center;
+   background:var(--card2);color:var(--text);border:1px solid #334155;border-radius:8px;
+   cursor:pointer;font-size:.82rem;font-weight:600;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
+ .btn:hover{border-color:var(--c,var(--accent))}
+ .btn.alt{background:var(--c,var(--accent));color:#0f172a;border-color:var(--c,var(--accent));font-weight:700}
  .btn.warn{background:rgba(239,68,68,.15);color:#fca5a5;border-color:var(--alarm)}
- .switch{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:.9rem}
- .switch input{width:16px;height:16px}
+ .switch{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:.9rem;height:var(--ctl-h)}
+ .switch input{width:17px;height:17px}
  table.rcp{width:100%;border-collapse:collapse;margin-top:10px}
  table.rcp td,table.rcp th{border-bottom:1px solid #24334a;padding:8px 6px;font-size:.82rem;text-align:left}
  table.rcp th{color:var(--muted);text-transform:uppercase;font-size:.66rem;letter-spacing:.04em}
@@ -137,7 +147,7 @@ PAGE_HTML = """<!doctype html><html lang=es><head><meta charset=utf-8>
  </div>
 </header>
 
- <div class=panel>
+ <div class="panel p1">
   <h2>Estado del envío</h2>
   <div class=row>
    <div class=switch>
@@ -152,18 +162,18 @@ PAGE_HTML = """<!doctype html><html lang=es><head><meta charset=utf-8>
   <p class=muted id=statusline style="margin-top:12px"></p>
  </div>
 
- <div class=panel>
+ <div class="panel p2">
   <h2>Destinatarios</h2>
   <div class=row>
    <div class=fld><label>Añadir correo</label><input type=email id=newmail placeholder="nombre@serviplana.es" size=28></div>
    <button class="btn alt" onclick=addMail()>Añadir</button>
-   <button class="btn warn" onclick=sendNow()>Enviar ahora (prueba)</button>
+   <button class="btn warn" onclick=sendNow()>Forzar envío</button>
    <span class=msg id=sendmsg></span>
   </div>
   <table class=rcp id=rcptbl></table>
  </div>
 
- <div class=panel>
+ <div class="panel p3">
   <h2>Reporte (vista en vivo) <button class="btn right" onclick=loadReport()>Actualizar</button></h2>
   <div class=report id=report><p class=muted>Cargando…</p></div>
  </div>
