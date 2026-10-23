@@ -32,6 +32,9 @@ def db_cfg():
         password=env("DB_PASSWORD", required=True),
         database=env("DB_NAME", "GRUPO"),
         tds_version=env("DB_TDS_VERSION", "7.4"),
+        # read_only = ApplicationIntent=ReadOnly (necesario para réplicas secundarias AlwaysOn).
+        # El reporte es de solo lectura, así que por defecto va activado.
+        read_only=str(env("DB_READONLY", "true")).strip().lower() in ("1", "true", "yes", "si", "sí"),
     )
 
 # ---------------------------------------------------------------------------
@@ -77,7 +80,8 @@ def fetch_data():
     c = db_cfg()
     cn = pymssql.connect(server=c["server"], port=str(c["port"]), user=c["user"],
                          password=c["password"], database=c["database"],
-                         tds_version=c["tds_version"], login_timeout=30, timeout=90)
+                         tds_version=c["tds_version"], read_only=c["read_only"],
+                         login_timeout=30, timeout=90)
     cur = cn.cursor(as_dict=True)
     def run_last(sql):
         cur.execute(sql); data=[]
