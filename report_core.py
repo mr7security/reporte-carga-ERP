@@ -91,7 +91,14 @@ def _fetch_once():
             if not cur.nextset(): break
         return data
     try:
+        # hora real del servidor de BD (frescura del dato), antes de las consultas pesadas
+        try:
+            cur.execute("SELECT GETDATE() AS now")
+            srv = (cur.fetchall() or [{}])[0].get("now")
+        except Exception:
+            srv = None
         return {
+            "_server_time": srv,
             "GRID":       run_last(Q.GRID_PRINCIPAL),
             "CARGADO":    run_last(Q.CARGADO),
             "EN_PROCESO": run_last(Q.EN_PROCESO),
@@ -265,25 +272,31 @@ def _logo_src():
 
 def build_html(data, full=True, datos_act=None):
     """full=True -> documento completo (email). full=False -> fragmento (dashboard)."""
-    if datos_act is None:
-        datos_act = dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    tables = _tables(data, datos_act)
     now = dt.datetime.now()
     DIAS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]
     MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto",
              "septiembre","octubre","noviembre","diciembre"]
-    fecha_larga = (f"{DIAS[now.weekday()]}, {now.day} de {MESES[now.month-1]} "
-                   f"de {now.year}, {now.strftime('%H:%M:%S')}")
+    def largo(d):
+        return f"{DIAS[d.weekday()]}, {d.day} de {MESES[d.month-1]} de {d.year}, {d.strftime('%H:%M:%S')}"
+    fecha_larga = largo(now)
+    # hora real del servidor de BD (frescura del dato)
+    srv = data.get("_server_time")
+    srv_largo = largo(srv) if srv else "no disponible"
+    if datos_act is None:
+        datos_act = (srv.strftime("%d/%m/%Y %H:%M:%S") if srv
+                     else now.strftime("%d/%m/%Y %H:%M:%S"))
+    tables = _tables(data, datos_act)
     dash_url = env("DASHBOARD_URL", "http://10.50.69.121:8070")
 
-    # Cabecera SIN logo: título centrado · fecha/hora a la derecha (tabla al 100%, robusta en Outlook)
+    # Cabecera SIN logo: título centrado · a la derecha, hora de generación y hora del servidor de datos
     header = (
         '<table width="100%" style="width:100%;border-collapse:collapse;margin-bottom:16px;"><tr>'
-        '<td style="width:30%;">&nbsp;</td>'
-        '<td style="width:40%;text-align:center;vertical-align:middle;">'
+        '<td style="width:28%;">&nbsp;</td>'
+        '<td style="width:38%;text-align:center;vertical-align:middle;">'
         '<span style="font:bold 20px Segoe UI,Arial;color:#2a4a6a;text-transform:uppercase;letter-spacing:.04em;">Previsión de Carga</span></td>'
-        '<td style="width:30%;text-align:right;vertical-align:middle;font:12px Segoe UI,Arial;color:#777;">'
-        f'Generado<br><b style="color:#444;">{fecha_larga}</b></td>'
+        '<td style="width:34%;text-align:right;vertical-align:middle;font:11px Segoe UI,Arial;color:#777;">'
+        f'Reporte generado<br><b style="color:#444;">{fecha_larga}</b>'
+        f'<br><span style="color:#999;">Datos del servidor</span><br><b style="color:#444;">{srv_largo}</b></td>'
         '</tr></table>'
     )
     footer = (
