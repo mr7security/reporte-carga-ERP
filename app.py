@@ -157,9 +157,9 @@ PAGE_HTML = """<!doctype html><html lang=es><head><meta charset=utf-8>
    <div class=switch>
      <label><input type=checkbox id=enabled {% if cfg.enabled %}checked{% endif %}> Envío diario activo</label>
    </div>
-   <div class=fld><label>Añadir hora de envío</label>
+   <div class=fld><label>Añadir hora de envío (24h)</label>
      <span style="display:flex;gap:6px;align-items:center">
-       <input type=time id=newtime>
+       <select id=newtime></select>
        <button class="btn alt" onclick=addTime() style="padding:0 14px">Añadir</button>
      </span>
    </div>
@@ -210,6 +210,14 @@ function render(){
   renderTimes();
   statusLine();
 }
+function fillTimes(){
+  const sel=document.getElementById('newtime');
+  if(!sel||sel.options.length) return;
+  const p=n=>String(n).padStart(2,'0');
+  let o='';
+  for(let h=0;h<24;h++) for(let m=0;m<60;m+=30) o+=`<option value="${p(h)}:${p(m)}">${p(h)}:${p(m)}</option>`;
+  sel.innerHTML=o;
+}
 function renderTimes(){
   const d=document.getElementById('timeslist');
   const chip=(t,i)=>`<span style="display:inline-block;background:var(--card2);border:1px solid #334155;border-radius:20px;padding:4px 12px;margin:0 6px 6px 0;font-size:.85rem">⏰ ${t} <a href="#" onclick="delTime(${i});return false" style="color:#b0484a;text-decoration:none;font-weight:700">×</a></span>`;
@@ -253,7 +261,7 @@ async function sendNow(){flash('sendmsg','Enviando…');
 async function loadReport(){const d=document.getElementById('report');d.innerHTML='<p class=muted>Cargando…</p>';
   try{const r=await fetch('api/report');const t=await r.text();d.innerHTML=t;}catch(e){d.innerHTML='<p style="color:#b0484a">Error al cargar el reporte</p>';}}
 function flash(id,txt){document.getElementById(id).textContent=txt;}
-render();loadReport();
+fillTimes();render();loadReport();
 </script></body></html>"""
 
 @app.route("/login", methods=["GET","POST"])
