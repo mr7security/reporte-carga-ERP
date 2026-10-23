@@ -82,10 +82,6 @@ def main():
         return  # en pausa; silencioso
 
     now_hhmm = dt.datetime.now().strftime("%H:%M")
-    # Migración del formato antiguo: si solo había 'last_sent', damos por enviadas
-    # las franjas ya vencidas de ese día para no reenviar al actualizar.
-    if not sent_slots and state.get("last_sent"):
-        sent_slots = {h: state["last_sent"] for h in horas_envio(cfg) if h <= now_hhmm}
     # franjas cuya hora ya pasó hoy y que aún no se han enviado hoy
     due = [h for h in horas_envio(cfg) if now_hhmm >= h and sent_slots.get(h) != today]
     if not due:
