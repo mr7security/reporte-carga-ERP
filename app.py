@@ -22,7 +22,7 @@ CONFIG_PATH = os.path.join(BASE, "config.json")
 
 DEFAULT_CONFIG = {
     "enabled": True,
-    "send_time": "07:30",
+    "send_times": ["07:30"],     # varias horas al día; se envía una vez en cada una
     "pause_until": None,          # "YYYY-MM-DD" o null
     "subject": "Previsión de Carga",
     "recipients": [],             # [{"email": "...", "active": true}]
@@ -34,6 +34,10 @@ def load_config():
             cfg = json.load(f)
         for k, v in DEFAULT_CONFIG.items():
             cfg.setdefault(k, v)
+        # migración del antiguo campo único "send_time"
+        if not cfg.get("send_times"):
+            st = cfg.get("send_time")
+            cfg["send_times"] = [st] if st else []
         return cfg
     except Exception:
         return dict(DEFAULT_CONFIG)
@@ -153,13 +157,19 @@ PAGE_HTML = """<!doctype html><html lang=es><head><meta charset=utf-8>
    <div class=switch>
      <label><input type=checkbox id=enabled {% if cfg.enabled %}checked{% endif %}> Envío diario activo</label>
    </div>
-   <div class=fld><label>Hora de envío</label><input type=time id=send_time value="{{cfg.send_time}}"></div>
+   <div class=fld><label>Añadir hora de envío</label>
+     <span style="display:flex;gap:6px;align-items:center">
+       <input type=time id=newtime>
+       <button class="btn alt" onclick=addTime() style="padding:0 14px">Añadir</button>
+     </span>
+   </div>
    <div class=fld><label>Pausar hasta (incluido)</label><input type=date id=pause_until value="{{cfg.pause_until or ''}}"></div>
    <div class=fld><label>Asunto</label><input type=text id=subject value="{{cfg.subject}}" size=26></div>
    <button class="btn alt" onclick=saveCfg()>Guardar</button>
    <span class=msg id=cfgmsg></span>
   </div>
-  <p class=muted id=statusline style="margin-top:12px"></p>
+  <div id=timeslist style="margin-top:12px"></div>
+  <p class=muted id=statusline style="margin-top:8px"></p>
  </div>
 
  <div class="panel p2">
@@ -197,18 +207,31 @@ function render(){
   });
   if(!(cfg.recipients||[]).length) h+="<tr><td colspan=3 class=muted>Sin destinatarios</td></tr>";
   t.innerHTML=h;
+  renderTimes();
   statusLine();
+}
+function renderTimes(){
+  const d=document.getElementById('timeslist');
+  const chip=(t,i)=>`<span style="display:inline-block;background:var(--card2);border:1px solid #334155;border-radius:20px;padding:4px 12px;margin:0 6px 6px 0;font-size:.85rem">⏰ ${t} <a href="#" onclick="delTime(${i});return false" style="color:#b0484a;text-decoration:none;font-weight:700">×</a></span>`;
+  const arr=(cfg.send_times||[]);
+  d.innerHTML = arr.length ? ('<span class=muted style="margin-right:6px">Horas de envío:</span>'+arr.map(chip).join('')) : '<span class=muted>Sin horas configuradas (no se enviará)</span>';
 }
 function statusLine(){
   const s=document.getElementById('statusline');
   const act=(cfg.recipients||[]).filter(r=>r.active).length;
-  let txt = cfg.enabled ? `Envío ACTIVO a las ${cfg.send_time} · ${act} destinatario(s) activo(s).` : "Envío DESACTIVADO.";
+  const horas=(cfg.send_times||[]).join(', ') || '—';
+  let txt = cfg.enabled ? `Envío ACTIVO a las ${horas} · ${act} destinatario(s) activo(s).` : "Envío DESACTIVADO.";
   if(cfg.pause_until) txt += ` En pausa hasta ${cfg.pause_until}.`;
   s.textContent=txt;
 }
+async function addTime(){const inp=document.getElementById('newtime');const t=inp.value;if(!t)return;
+  cfg.send_times=cfg.send_times||[];
+  if(cfg.send_times.includes(t)){flash('cfgmsg','Esa hora ya está');return;}
+  cfg.send_times.push(t);cfg.send_times.sort();inp.value='';
+  const j=await post(cfg);cfg=j.config;renderTimes();statusLine();flash('cfgmsg','Hora añadida ✓');}
+async function delTime(i){cfg.send_times.splice(i,1);const j=await post(cfg);cfg=j.config;renderTimes();statusLine();}
 function collect(){
   cfg.enabled=document.getElementById('enabled').checked;
-  cfg.send_time=document.getElementById('send_time').value;
   cfg.pause_until=document.getElementById('pause_until').value||null;
   cfg.subject=document.getElementById('subject').value;
 }
@@ -268,9 +291,18 @@ def api_report():
 def api_config():
     incoming = request.get_json(force=True, silent=True) or {}
     cfg = load_config()
-    for k in ("enabled","send_time","pause_until","subject","recipients"):
+    for k in ("enabled","send_times","pause_until","subject","recipients"):
         if k in incoming:
             cfg[k] = incoming[k]
+    # normaliza horas: formato HH:MM, sin duplicados, ordenadas
+    import re
+    horas = []
+    for t in cfg.get("send_times", []):
+        t = (t or "").strip()
+        if re.match(r"^\d{2}:\d{2}$", t) and t not in horas:
+            horas.append(t)
+    cfg["send_times"] = sorted(horas)
+    cfg.pop("send_time", None)   # ya no se usa
     # saneado + deduplicado (sin distinguir mayúsculas/minúsculas)
     clean, seen = [], set()
     for r in cfg.get("recipients", []):
