@@ -151,25 +151,6 @@ def _colgroup():
 _BOTTOM_TBL = ('<table width="100%" style="border-collapse:collapse;margin-bottom:14px;'
                'width:100%;table-layout:fixed;">')
 
-def _panel(titulo, filas, cols):
-    h  = _BOTTOM_TBL + _colgroup()
-    h += "<tr>" + th(titulo, "#3a6ea5") + th("", "#3a6ea5")
-    for _,lbl in cols: h += th(lbl, "#3a6ea5")
-    h += th("Total", "#2a4a6a") + "</tr>"
-    for etiqueta, porcentro in filas:
-        for i, (unidad, fmt, key) in enumerate((("M2", fm2, "m2"), ("Pz", fpz, "pz"))):
-            h += "<tr>"
-            if i == 0:   # etiqueta combinada (rowspan) y centrada
-                h += td(etiqueta, "#eef3f8", bold=True, rowspan=2)
-            h += td(unidad, "#eef3f8")
-            total = 0
-            for cod,_ in cols:
-                val = porcentro.get(cod, {}).get(key, 0) or 0
-                total += val
-                h += td(fmt(val))
-            h += td(fmt(total), "#eef3f8", bold=True) + "</tr>"
-    return h + "</table>"
-
 def _por_centro(rows, fold_nav=False):
     d = {}
     for r in rows:
@@ -182,55 +163,70 @@ def _por_centro(rows, fold_nav=False):
 
 def _tables(data, datos_act):
     grid = _grid(data["GRID"])
-    carga = _panel("Carga actual", [
-        ("Cargado",   _por_centro(data["CARGADO"],   fold_nav=True)),
-        ("En proceso",_por_centro(data["EN_PROCESO"],fold_nav=True)),
-    ], STOCK_COLS)
-    # Producto
-    prod_by_unit = {r.get("UD"): r for r in data["PRODUCTO"]}
+    cols = STOCK_COLS
+    # --- datos agregados ---
+    c_carg = _por_centro(data["CARGADO"],    fold_nav=True)
+    c_proc = _por_centro(data["EN_PROCESO"], fold_nav=True)
+    prod   = {r.get("UD"): r for r in data["PRODUCTO"]}
     PROD_KEYS = {"STN":"STN","ALA":"ALA","KER":"KER","VIT":"VIT","VNX":"VNX"}
-    hp  = _BOTTOM_TBL + _colgroup()
-    hp += "<tr>" + th("Stock Actual", "#8a6d3b") + th("", "#8a6d3b")
-    for _,lbl in STOCK_COLS: hp += th(lbl, "#8a6d3b")
-    hp += th("Total", "#5a4420") + "</tr>"
-    for i, (unidad, fmt) in enumerate((("M2", fm2), ("PZ", fpz))):
-        r = prod_by_unit.get(unidad, {})
-        hp += "<tr>"
-        if i == 0:
-            hp += td("Producto", "#f6efe0", bold=True, rowspan=2)
-        hp += td("M2" if unidad=="M2" else "Pz", "#f6efe0")
-        total = 0
-        for cod,_ in STOCK_COLS:
-            if cod in PROD_KEYS:
-                val = float(r.get(PROD_KEYS[cod]) or 0); total += val
-                hp += td(fmt(val))
-            else:
-                hp += td("", "#f0f0f0")
-        hp += td(fmt(total), "#f6efe0", bold=True) + "</tr>"
-    hp += "</table>"
-    # Almacén
     alm = {}
     for r in data["ALMACEN"]:
-        cod = canon(r.get("situacionerp")); u = r.get("atrUnidad"); t = float(r.get("tot") or 0)
-        alm.setdefault(cod, {"M2":0,"PZ":0})
-        if u in ("M2","PZ"): alm[cod][u] += t
-    ha  = _BOTTOM_TBL + _colgroup()
-    ha += "<tr>" + th(f"Almacén — datos act.: {datos_act}", "#8a6d3b", span=2+len(STOCK_COLS)+1) + "</tr>"
-    ha += "<tr>" + th("", "#8a6d3b") + th("", "#8a6d3b")
-    for _,lbl in STOCK_COLS: ha += th(lbl, "#8a6d3b")
-    ha += th("Total", "#5a4420") + "</tr>"
-    for i, (unidad, fmt) in enumerate((("M2", fm2), ("PZ", fpz))):
-        ha += "<tr>"
-        if i == 0:
-            ha += td("Almacén", "#f6efe0", bold=True, rowspan=2)
-        ha += td("M2" if unidad=="M2" else "Pz", "#f6efe0")
-        total = 0
-        for cod,_ in STOCK_COLS:
-            val = alm.get(cod, {}).get(unidad, 0); total += val
-            ha += td(fmt(val))
-        ha += td(fmt(total), "#f6efe0", bold=True) + "</tr>"
-    ha += "</table>"
-    return grid + carga + hp + ha
+        c = canon(r.get("situacionerp")); u = r.get("atrUnidad"); t = float(r.get("tot") or 0)
+        alm.setdefault(c, {"M2":0,"PZ":0})
+        if u in ("M2","PZ"): alm[c][u] += t
+
+    AZ1, AZ2 = "#3a6ea5", "#2a4a6a"   # azul (Carga actual)
+    MA1, MA2 = "#8a6d3b", "#5a4420"   # marrón (Stock / Almacén)
+    LB, LN   = "#eef3f8", "#f6efe0"   # fondos de etiqueta
+
+    # UNA sola tabla para las 3 secciones -> columnas alineadas en CUALQUIER cliente,
+    # incluido Outlook Classic (motor Word), que ignora table-layout:fixed / colgroup.
+    h = ('<table width="100%" style="border-collapse:collapse;margin-bottom:14px;'
+         'width:100%;table-layout:fixed;">' + _colgroup())
+
+    def band(title, bg, bg2):
+        r = "<tr>" + th(title, bg, span=2)
+        for _, lbl in cols: r += th(lbl, bg)
+        return r + th("Total", bg2) + "</tr>"
+
+    def fullband(title, bg):
+        return "<tr>" + th(title, bg, span=2 + len(cols) + 1) + "</tr>"
+
+    def filas(label, lblbg, valfn):
+        out = ""
+        for i, (disp, fmt, key) in enumerate((("M2", fm2, "M2"), ("Pz", fpz, "PZ"))):
+            out += "<tr>"
+            if i == 0:
+                out += td(label, lblbg, bold=True, rowspan=2)
+            out += td(disp, lblbg)
+            total = 0.0
+            for cod, _ in cols:
+                v = valfn(cod, key)
+                if v is None:
+                    out += td("", "#f0f0f0")     # C.Logístico sin dato en Producto
+                else:
+                    total += v
+                    out += td(fmt(v))
+            out += td(fmt(total), lblbg, bold=True) + "</tr>"
+        return out
+
+    cargfn = lambda cod, key: c_carg.get(cod, {}).get("m2" if key == "M2" else "pz", 0)
+    procfn = lambda cod, key: c_proc.get(cod, {}).get("m2" if key == "M2" else "pz", 0)
+    almfn  = lambda cod, key: alm.get(cod, {}).get(key, 0)
+    def prodfn(cod, key):
+        if cod in PROD_KEYS:
+            return float((prod.get(key, {}) or {}).get(PROD_KEYS[cod]) or 0)
+        return None
+
+    h += band("Carga actual", AZ1, AZ2)
+    h += filas("Cargado",    LB, cargfn)
+    h += filas("En proceso", LB, procfn)
+    h += band("Stock Actual", MA1, MA2)
+    h += filas("Producto", LN, prodfn)
+    h += fullband(f"Almacén — datos act.: {datos_act}", MA2)
+    h += filas("Almacén", LN, almfn)
+    h += "</table>"
+    return grid + h
 
 def _logo_src():
     """Logo de static/ incrustado como data URI (para que se vea también en el correo)."""
