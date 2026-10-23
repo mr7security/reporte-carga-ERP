@@ -74,8 +74,7 @@ def fpz(v): return fnum(v, 0)
 # ---------------------------------------------------------------------------
 # Acceso a datos
 # ---------------------------------------------------------------------------
-def fetch_data():
-    """Ejecuta las 5 consultas y devuelve dict con listas de dicts."""
+def _fetch_once():
     import pymssql
     c = db_cfg()
     cn = pymssql.connect(server=c["server"], port=str(c["port"]), user=c["user"],
@@ -92,7 +91,7 @@ def fetch_data():
             if not cur.nextset(): break
         return data
     try:
-        data = {
+        return {
             "GRID":       run_last(Q.GRID_PRINCIPAL),
             "CARGADO":    run_last(Q.CARGADO),
             "EN_PROCESO": run_last(Q.EN_PROCESO),
@@ -101,7 +100,27 @@ def fetch_data():
         }
     finally:
         cn.close()
-    return data
+
+def fetch_data(intentos=4):
+    """Ejecuta las 5 consultas con reintentos.
+    Las réplicas secundarias AlwaysOn corren bajo snapshot isolation y pueden fallar
+    de forma transitoria (errores 3960/3961) si hay un cambio de metadatos (DDL) a la vez.
+    Reintentar con una nueva transacción (snapshot fresco) lo resuelve."""
+    import time
+    last_err = None
+    for i in range(intentos):
+        try:
+            return _fetch_once()
+        except Exception as e:
+            last_err = e
+            m = str(e).lower()
+            transitorio = ("3961" in m or "3960" in m or "snapshot" in m
+                           or "deadlock" in m or "1205" in m)
+            if transitorio and i < intentos - 1:
+                time.sleep(2 + i * 2)   # backoff: 2s, 4s, 6s
+                continue
+            raise
+    raise last_err
 
 # ---------------------------------------------------------------------------
 # Render HTML (tablas con estilos inline: válido para email y para el visor)
