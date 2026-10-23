@@ -118,7 +118,7 @@ def _grid(data):
             ("PiP","Pi",fpz),("PzP1","Pz",fpz),("MuP","Mu",fpz)]
     tot  = [("M2T","M2",fm2),("PzT","Pz",fpz),("UdT","Ud",fpz),("PcT","PC",fpz),
             ("PiT","Pi",fpz),("PzT1","Pz",fpz),("MuT","Mu",fpz)]
-    h  = '<table style="border-collapse:collapse;margin-bottom:18px;">'
+    h  = '<table width="100%" style="border-collapse:collapse;margin-bottom:18px;width:100%;">'
     h += "<tr>" + th("Fecha", GREEN) + th("Preparado", GREEN, span=len(prep)) + th("Total", RED, span=len(tot)) + "</tr>"
     h += "<tr>" + th("", GREEN)
     for _,lbl,_ in prep: h += th(lbl, GREEN)
@@ -134,8 +134,20 @@ def _grid(data):
         h += "</tr>"
     return h + "</table>"
 
+# Anchos de columna idénticos para las 3 tablas de abajo (así STN queda bajo STN, etc.)
+# 2 columnas de etiqueta + N columnas de datos + Total. table-layout:fixed las respeta en Outlook.
+def _colgroup():
+    n = len(STOCK_COLS)
+    w = round(84.0 / (n + 1), 3)   # datos + total reparten el 84%
+    cols = '<col style="width:11%"><col style="width:5%">'
+    cols += ('<col style="width:%s%%">' % w) * (n + 1)
+    return "<colgroup>" + cols + "</colgroup>"
+
+_BOTTOM_TBL = ('<table width="100%" style="border-collapse:collapse;margin-bottom:14px;'
+               'width:100%;table-layout:fixed;">')
+
 def _panel(titulo, filas, cols):
-    h  = '<table style="border-collapse:collapse;margin-bottom:14px;">'
+    h  = _BOTTOM_TBL + _colgroup()
     h += "<tr>" + th(titulo, "#3a6ea5") + th("", "#3a6ea5")
     for _,lbl in cols: h += th(lbl, "#3a6ea5")
     h += th("Total", "#2a4a6a") + "</tr>"
@@ -166,11 +178,11 @@ def _tables(data, datos_act):
     carga = _panel("Carga actual", [
         ("Cargado",   _por_centro(data["CARGADO"],   fold_nav=True)),
         ("En proceso",_por_centro(data["EN_PROCESO"],fold_nav=True)),
-    ], CARGA_COLS)
+    ], STOCK_COLS)
     # Producto
     prod_by_unit = {r.get("UD"): r for r in data["PRODUCTO"]}
     PROD_KEYS = {"STN":"STN","ALA":"ALA","KER":"KER","VIT":"VIT","VNX":"VNX"}
-    hp  = '<table style="border-collapse:collapse;margin-bottom:14px;">'
+    hp  = _BOTTOM_TBL + _colgroup()
     hp += "<tr>" + th("Stock Actual", "#8a6d3b") + th("", "#8a6d3b")
     for _,lbl in STOCK_COLS: hp += th(lbl, "#8a6d3b")
     hp += th("Total", "#5a4420") + "</tr>"
@@ -193,7 +205,7 @@ def _tables(data, datos_act):
         cod = canon(r.get("situacionerp")); u = r.get("atrUnidad"); t = float(r.get("tot") or 0)
         alm.setdefault(cod, {"M2":0,"PZ":0})
         if u in ("M2","PZ"): alm[cod][u] += t
-    ha  = '<table style="border-collapse:collapse;margin-bottom:14px;">'
+    ha  = _BOTTOM_TBL + _colgroup()
     ha += "<tr>" + th(f"Almacén — datos act.: {datos_act}", "#8a6d3b", span=2+len(STOCK_COLS)+1) + "</tr>"
     ha += "<tr>" + th("", "#8a6d3b") + th("", "#8a6d3b")
     for _,lbl in STOCK_COLS: ha += th(lbl, "#8a6d3b")
@@ -234,13 +246,10 @@ def build_html(data, full=True, datos_act=None):
                    f"de {now.year}, {now.strftime('%H:%M:%S')}")
     dash_url = env("DASHBOARD_URL", "http://10.50.69.121:8070")
 
-    logo = _logo_src()
-    logo_cell = (f'<img src="{logo}" alt="SGP" style="height:42px;background:#fff;border-radius:6px;padding:3px 7px">'
-                 if logo else '<span style="font:bold 20px Segoe UI,Arial;color:#2a4a6a">SGP</span>')
-    # Cabecera: logo izquierda · título centro · fecha/hora derecha (tabla, robusta en email)
+    # Cabecera SIN logo: título centrado · fecha/hora a la derecha (tabla al 100%, robusta en Outlook)
     header = (
-        '<table style="width:100%;border-collapse:collapse;margin-bottom:18px;"><tr>'
-        f'<td style="width:30%;text-align:left;vertical-align:middle;">{logo_cell}</td>'
+        '<table width="100%" style="width:100%;border-collapse:collapse;margin-bottom:16px;"><tr>'
+        '<td style="width:30%;">&nbsp;</td>'
         '<td style="width:40%;text-align:center;vertical-align:middle;">'
         '<span style="font:bold 20px Segoe UI,Arial;color:#2a4a6a;text-transform:uppercase;letter-spacing:.04em;">Previsión de Carga</span></td>'
         '<td style="width:30%;text-align:right;vertical-align:middle;font:12px Segoe UI,Arial;color:#777;">'
@@ -253,14 +262,13 @@ def build_html(data, full=True, datos_act=None):
         '<p style="text-align:center;font:12px Segoe UI,Arial;color:#777;margin:0;">'
         f'Para modificar las reglas de envío, <a href="{dash_url}" style="color:#3b82f6;text-decoration:none;font-weight:600;">pulse aquí</a>.</p>'
     )
-    # Las tablas van en un contenedor con scroll horizontal para que no desborden en móvil.
-    tablas_scroll = f'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">{tables}</div>'
-    inner = f'{header}{tablas_scroll}{footer}'
+    inner = f'{header}{tables}{footer}'
     if not full:
         return inner
-    return (f'<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+    return (f'<!doctype html><html><head><meta charset="utf-8">'
+            f'<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
             f'<body style="margin:0;padding:12px;background:#f0f0f0;">'
-            f'<div style="max-width:1150px;width:100%;box-sizing:border-box;margin:auto;background:#fff;padding:16px;border:1px solid {BORDER};">'
+            f'<div style="max-width:1150px;width:100%;margin:auto;background:#fff;padding:16px;border:1px solid {BORDER};">'
             f'{inner}'
             f'</div></body></html>')
 

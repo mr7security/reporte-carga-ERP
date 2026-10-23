@@ -22,6 +22,7 @@ import report_core as core
 CONFIG_PATH = os.path.join(BASE, "config.json")
 STATE_PATH  = os.path.join(BASE, "state.json")
 LOG_PATH    = os.path.join(BASE, "salidas", "envio.log")
+os.makedirs(os.path.join(BASE, "salidas"), exist_ok=True)  # asegura la carpeta de logs
 
 def log(msg):
     os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
