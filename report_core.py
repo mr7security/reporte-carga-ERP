@@ -170,11 +170,14 @@ def _colgroup():
 _BOTTOM_TBL = ('<table width="100%" style="border-collapse:collapse;margin-bottom:14px;'
                'width:100%;table-layout:fixed;">')
 
-def _por_centro(rows, fold_nav=False):
+def _por_centro(rows, drop_nav=False):
     d = {}
     for r in rows:
         cod = canon(r.get("centro") if r.get("centro") is not None else r.get("almacen"))
-        if fold_nav and cod == "NAV": cod = "STN"
+        # En Cargado/En proceso, 'NAV' es un DUPLICADO de 'STN' (mismas órdenes bajo
+        # otro código por el UNION de la consulta): se descarta para no duplicar STN.
+        if drop_nav and cod == "NAV":
+            continue
         d.setdefault(cod, {"m2":0,"pz":0})
         d[cod]["m2"] += float(r.get("metros") or 0)
         d[cod]["pz"] += float(r.get("piezas") or 0)
@@ -184,8 +187,8 @@ def _tables(data, datos_act):
     grid = _grid(data["GRID"])
     cols = STOCK_COLS
     # --- datos agregados ---
-    c_carg = _por_centro(data["CARGADO"],    fold_nav=True)
-    c_proc = _por_centro(data["EN_PROCESO"], fold_nav=True)
+    c_carg = _por_centro(data["CARGADO"],    drop_nav=True)
+    c_proc = _por_centro(data["EN_PROCESO"], drop_nav=True)
     prod   = {r.get("UD"): r for r in data["PRODUCTO"]}
     PROD_KEYS = {"STN":"STN","ALA":"ALA","KER":"KER","VIT":"VIT","VNX":"VNX"}
     alm = {}
