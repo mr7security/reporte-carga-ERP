@@ -112,10 +112,11 @@ ROW_A="#fbfbe8"; ROW_B="#ffffff"
 def th(txt, bg, color=HEAD_TXT, span=1, align="center"):
     return (f'<th colspan="{span}" style="background:{bg};color:{color};border:1px solid {BORDER};'
             f'padding:3px 6px;font:bold 11px Segoe UI,Arial;text-align:{align};">{txt}</th>')
-def td(txt, bg=ROW_B, align="right", bold=False):
+def td(txt, bg=ROW_B, align="center", bold=False, rowspan=1):
     w = "bold" if bold else "normal"
-    return (f'<td style="background:{bg};color:#1f2937;border:1px solid {BORDER};padding:2px 6px;'
-            f'font:{w} 11px Segoe UI,Arial;text-align:{align};white-space:nowrap;">{txt}</td>')
+    rs = f' rowspan="{rowspan}"' if rowspan != 1 else ''
+    return (f'<td{rs} style="background:{bg};color:#1f2937;border:1px solid {BORDER};padding:2px 6px;'
+            f'font:{w} 11px Segoe UI,Arial;text-align:{align};vertical-align:middle;white-space:nowrap;">{txt}</td>')
 
 def _grid(data):
     prep = [("M2P","M2",fm2),("PzP","Pz",fpz),("UdP","Ud",fpz),("PcP","PC",fpz),
@@ -156,9 +157,11 @@ def _panel(titulo, filas, cols):
     for _,lbl in cols: h += th(lbl, "#3a6ea5")
     h += th("Total", "#2a4a6a") + "</tr>"
     for etiqueta, porcentro in filas:
-        for unidad, fmt, key in (("M2", fm2, "m2"), ("Pz", fpz, "pz")):
-            h += "<tr>" + td(etiqueta if unidad=="M2" else "", "#eef3f8", align="left", bold=True)
-            h += td(unidad, "#eef3f8", align="left")
+        for i, (unidad, fmt, key) in enumerate((("M2", fm2, "m2"), ("Pz", fpz, "pz"))):
+            h += "<tr>"
+            if i == 0:   # etiqueta combinada (rowspan) y centrada
+                h += td(etiqueta, "#eef3f8", bold=True, rowspan=2)
+            h += td(unidad, "#eef3f8")
             total = 0
             for cod,_ in cols:
                 val = porcentro.get(cod, {}).get(key, 0) or 0
@@ -190,10 +193,12 @@ def _tables(data, datos_act):
     hp += "<tr>" + th("Stock Actual", "#8a6d3b") + th("", "#8a6d3b")
     for _,lbl in STOCK_COLS: hp += th(lbl, "#8a6d3b")
     hp += th("Total", "#5a4420") + "</tr>"
-    for unidad, fmt in (("M2", fm2), ("PZ", fpz)):
+    for i, (unidad, fmt) in enumerate((("M2", fm2), ("PZ", fpz))):
         r = prod_by_unit.get(unidad, {})
-        hp += "<tr>" + td("Producto" if unidad=="M2" else "", "#f6efe0", align="left", bold=True)
-        hp += td("M2" if unidad=="M2" else "Pz", "#f6efe0", align="left")
+        hp += "<tr>"
+        if i == 0:
+            hp += td("Producto", "#f6efe0", bold=True, rowspan=2)
+        hp += td("M2" if unidad=="M2" else "Pz", "#f6efe0")
         total = 0
         for cod,_ in STOCK_COLS:
             if cod in PROD_KEYS:
@@ -214,8 +219,11 @@ def _tables(data, datos_act):
     ha += "<tr>" + th("", "#8a6d3b") + th("", "#8a6d3b")
     for _,lbl in STOCK_COLS: ha += th(lbl, "#8a6d3b")
     ha += th("Total", "#5a4420") + "</tr>"
-    for unidad, fmt in (("M2", fm2), ("PZ", fpz)):
-        ha += "<tr>" + td("", "#f6efe0") + td("M2" if unidad=="M2" else "Pz", "#f6efe0", align="left")
+    for i, (unidad, fmt) in enumerate((("M2", fm2), ("PZ", fpz))):
+        ha += "<tr>"
+        if i == 0:
+            ha += td("Almacén", "#f6efe0", bold=True, rowspan=2)
+        ha += td("M2" if unidad=="M2" else "Pz", "#f6efe0")
         total = 0
         for cod,_ in STOCK_COLS:
             val = alm.get(cod, {}).get(unidad, 0); total += val
