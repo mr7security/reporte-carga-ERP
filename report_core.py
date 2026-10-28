@@ -142,12 +142,12 @@ TABLE_W = 1100
 
 def th(txt, bg, color=HEAD_TXT, span=1, align="center"):
     return (f'<th colspan="{span}" style="background:{bg};color:{color};border:1px solid {BORDER};'
-            f'padding:3px 6px;font:bold 11px Segoe UI,Arial;text-align:{align};">{txt}</th>')
+            f'padding:3px 5px;font:bold 10px Segoe UI,Arial;text-align:{align};">{txt}</th>')
 def td(txt, bg=ROW_B, align="center", bold=False, rowspan=1):
     w = "bold" if bold else "normal"
     rs = f' rowspan="{rowspan}"' if rowspan != 1 else ''
-    return (f'<td{rs} style="background:{bg};color:#1f2937;border:1px solid {BORDER};padding:2px 6px;'
-            f'font:{w} 11px Segoe UI,Arial;text-align:{align};vertical-align:middle;white-space:nowrap;">{txt}</td>')
+    return (f'<td{rs} style="background:{bg};color:#1f2937;border:1px solid {BORDER};padding:2px 5px;'
+            f'font:{w} 10px Segoe UI,Arial;text-align:{align};vertical-align:middle;white-space:nowrap;">{txt}</td>')
 
 def _grid(data):
     prep = [("M2P","M2",fm2),("PzP","Pz",fpz),("UdP","Ud",fpz),("PcP","PC",fpz),
