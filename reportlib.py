@@ -55,7 +55,8 @@ def document(title, body, *, full=True, now=None, srv=None,
         return inner
     return (f'<!doctype html><html><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
-            f'<body style="margin:0;padding:12px;background:#f0f0f0;">'
-            f'<div style="width:{width}px;margin:auto;background:#fff;padding:16px;border:1px solid {BORDER};">'
+            f'<body style="margin:0;padding:0;background:#f0f0f0;">'
+            f'<div style="box-sizing:border-box;width:{width}px;margin:0 auto;background:#fff;'
+            f'padding:16px;border:1px solid {BORDER};">'
             f'{inner}'
             f'</div></body></html>')
