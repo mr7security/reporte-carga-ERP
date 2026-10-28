@@ -46,17 +46,20 @@ def document(title, body, *, full=True, now=None, srv=None,
              dash_url="http://10.50.69.121:8070", width=1140):
     """Compone el documento: cabecera + cuerpo + pie.
     full=True -> HTML completo (email). full=False -> fragmento (visor del dashboard).
-    width = ancho FIJO de la tarjeta en px, ajustado al ancho de las tablas del reporte.
-    La tarjeta debe envolver a la tabla (no 100%): si fuera más estrecha, la tabla se
-    desbordaría por la derecha en el móvil; con ancho fijo, Outlook escala el bloque entero."""
+    width = ancho máximo de la tarjeta en el ordenador (en el móvil ocupa el 100%).
+    Las tablas van en un contenedor con scroll horizontal: en el móvil se DESLIZAN hacia
+    los lados (sin encogerse ni cortarse); en el ordenador, al ser la tarjeta ancha, se ve todo.
+    La cabecera y el pie quedan fuera del scroll, así que siempre se leen bien."""
     now = now or dt.datetime.now()
-    inner = f'{header(title, now, srv)}{body}{footer(dash_url)}'
+    # Las tablas (anchas, px fijos) dentro de un contenedor desplazable en horizontal.
+    scroll = f'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">{body}</div>'
+    inner = f'{header(title, now, srv)}{scroll}{footer(dash_url)}'
     if not full:
         return inner
     return (f'<!doctype html><html><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
             f'<body style="margin:0;padding:12px;background:#f0f0f0;">'
-            f'<div style="box-sizing:border-box;width:{width}px;margin:0 auto;background:#fff;'
-            f'padding:16px;border:1px solid {BORDER};">'
+            f'<div style="box-sizing:border-box;max-width:{width}px;width:100%;margin:0 auto;'
+            f'background:#fff;padding:16px;border:1px solid {BORDER};">'
             f'{inner}'
             f'</div></body></html>')
