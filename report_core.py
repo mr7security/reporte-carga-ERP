@@ -154,7 +154,12 @@ def _grid(data):
             ("PiP","Pi",fpz),("PzP1","Pz",fpz),("MuP","Mu",fpz)]
     tot  = [("M2T","M2",fm2),("PzT","Pz",fpz),("UdT","Ud",fpz),("PcT","PC",fpz),
             ("PiT","Pi",fpz),("PzT1","Pz",fpz),("MuT","Mu",fpz)]
-    h  = f'<table width="{TABLE_W}" style="border-collapse:collapse;margin-bottom:18px;width:{TABLE_W}px;">'
+    n = len(prep) + len(tot)                 # 14 columnas de datos + Fecha = 15
+    fecha_w = 92
+    col_w = round((TABLE_W - fecha_w) / n)    # mismo ancho fijo por columna
+    h  = (f'<table width="{TABLE_W}" style="border-collapse:collapse;margin-bottom:18px;'
+          f'width:{TABLE_W}px;table-layout:fixed;">'
+          f'<colgroup><col style="width:{fecha_w}px">' + f'<col style="width:{col_w}px">' * n + '</colgroup>')
     h += "<tr>" + th("Fecha", GREEN) + th("Preparado", GREEN, span=len(prep)) + th("Total", RED, span=len(tot)) + "</tr>"
     h += "<tr>" + th("", GREEN)
     for _,lbl,_ in prep: h += th(lbl, GREEN)
