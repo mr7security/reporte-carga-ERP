@@ -7,6 +7,8 @@ __pycache__/
 # Estado y salidas en runtime (se generan solos)
 config.json
 state.json
+config.*.json
+state.*.json
 salidas/
 
 # Ficheros de prueba / scratch (no forman parte de la app)
