@@ -134,6 +134,11 @@ def fetch_data(intentos=4):
 # ---------------------------------------------------------------------------
 GREEN="#4a9e4a"; RED="#b0484a"; BORDER="#c8c8c8"; HEAD_TXT="#ffffff"
 ROW_A="#fbfbe8"; ROW_B="#ffffff"
+# Ancho FIJO en píxeles de las tablas (no %). Con muchas columnas, un ancho en px
+# hace que Outlook iPhone/iOS ESCALE el mensaje para que quepa (y el usuario hace
+# zoom) en vez de aplastar las columnas y partir los importes hacia abajo.
+# En Outlook Classic (motor Word) sigue alineado al ser una sola tabla fija.
+TABLE_W = 1100
 
 def th(txt, bg, color=HEAD_TXT, span=1, align="center"):
     return (f'<th colspan="{span}" style="background:{bg};color:{color};border:1px solid {BORDER};'
@@ -149,7 +154,7 @@ def _grid(data):
             ("PiP","Pi",fpz),("PzP1","Pz",fpz),("MuP","Mu",fpz)]
     tot  = [("M2T","M2",fm2),("PzT","Pz",fpz),("UdT","Ud",fpz),("PcT","PC",fpz),
             ("PiT","Pi",fpz),("PzT1","Pz",fpz),("MuT","Mu",fpz)]
-    h  = '<table width="100%" style="border-collapse:collapse;margin-bottom:18px;width:100%;">'
+    h  = f'<table width="{TABLE_W}" style="border-collapse:collapse;margin-bottom:18px;width:{TABLE_W}px;">'
     h += "<tr>" + th("Fecha", GREEN) + th("Preparado", GREEN, span=len(prep)) + th("Total", RED, span=len(tot)) + "</tr>"
     h += "<tr>" + th("", GREEN)
     for _,lbl,_ in prep: h += th(lbl, GREEN)
@@ -169,9 +174,10 @@ def _grid(data):
 # 2 columnas de etiqueta + N columnas de datos + Total. table-layout:fixed las respeta en Outlook.
 def _colgroup():
     n = len(STOCK_COLS)
-    w = round(84.0 / (n + 1), 3)   # datos + total reparten el 84%
-    cols = '<col style="width:11%"><col style="width:5%">'
-    cols += ('<col style="width:%s%%">' % w) * (n + 1)
+    lbl1, lbl2 = 118, 56           # columnas de etiqueta (nombre + M2/Pz)
+    w = round((TABLE_W - lbl1 - lbl2) / (n + 1))   # datos + total, en px
+    cols = f'<col style="width:{lbl1}px"><col style="width:{lbl2}px">'
+    cols += (f'<col style="width:{w}px">') * (n + 1)
     return "<colgroup>" + cols + "</colgroup>"
 
 _BOTTOM_TBL = ('<table width="100%" style="border-collapse:collapse;margin-bottom:14px;'
@@ -210,8 +216,8 @@ def _tables(data, datos_act):
 
     # UNA sola tabla para las 3 secciones -> columnas alineadas en CUALQUIER cliente,
     # incluido Outlook Classic (motor Word), que ignora table-layout:fixed / colgroup.
-    h = ('<table width="100%" style="border-collapse:collapse;margin-bottom:14px;'
-         'width:100%;table-layout:fixed;">' + _colgroup())
+    h = (f'<table width="{TABLE_W}" style="border-collapse:collapse;margin-bottom:14px;'
+         f'width:{TABLE_W}px;table-layout:fixed;">' + _colgroup())
 
     def band(title, bg, bg2):
         r = "<tr>" + th(title, bg, span=2)
