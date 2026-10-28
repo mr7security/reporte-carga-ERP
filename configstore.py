@@ -17,12 +17,12 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 # Valores por defecto por reporte
 DEFAULTS = {
     "carga":  {"enabled": True, "send_times": ["07:30"], "pause_until": None,
-               "subject": "Previsión de Carga", "recipients": []},
+               "subject": "Previsión de Carga", "recipients": [], "weekdays_only": True},
     "ventas": {"enabled": True, "send_times": [], "pause_until": None,
-               "subject": "Ventas (Alb)", "recipients": []},
+               "subject": "Ventas (Alb)", "recipients": [], "weekdays_only": True},
 }
 _BASE_DEFAULT = {"enabled": True, "send_times": [], "pause_until": None,
-                 "subject": "Reporte", "recipients": []}
+                 "subject": "Reporte", "recipients": [], "weekdays_only": True}
 
 
 def _default(rid):

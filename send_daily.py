@@ -79,6 +79,9 @@ def procesar(rep, force):
     pause = cfg.get("pause_until")
     if pause and today <= pause:
         return  # en pausa; silencioso
+    # solo de lunes a viernes (weekday(): lunes=0 … sábado=5, domingo=6)
+    if cfg.get("weekdays_only", True) and dt.date.today().weekday() >= 5:
+        return  # fin de semana; silencioso
 
     now_hhmm = dt.datetime.now().strftime("%H:%M")
     state = CS.load_state(rid)

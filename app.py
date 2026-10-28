@@ -40,9 +40,10 @@ def login_required(f):
 def _clean_config(incoming, rid):
     """Normaliza una config entrante: horas HH:MM únicas/ordenadas y destinatarios sin duplicados."""
     cfg = CS.load_config(rid)
-    for k in ("enabled", "send_times", "pause_until", "subject", "recipients"):
+    for k in ("enabled", "send_times", "pause_until", "subject", "recipients", "weekdays_only"):
         if k in incoming:
             cfg[k] = incoming[k]
+    cfg["weekdays_only"] = bool(cfg.get("weekdays_only", True))
     horas = []
     for t in cfg.get("send_times", []):
         t = (t or "").strip()
@@ -170,6 +171,9 @@ PAGE_HTML = """<!doctype html><html lang=es><head><meta charset=utf-8>
    <div class=switch>
      <label><input type=checkbox class=enabled onchange="saveCfg('{{r.id}}')"> Envío diario activo</label>
    </div>
+   <div class=switch>
+     <label><input type=checkbox class=weekdays onchange="saveCfg('{{r.id}}')"> Solo de lunes a viernes</label>
+   </div>
    <div class=fld><label>Añadir hora de envío (24h)</label>
      <span style="display:flex;gap:6px;align-items:center">
        <select class=newtime></select>
@@ -239,6 +243,7 @@ function fillTimes(rid){
 function syncInputs(rid){
   const cfg=STATE[rid];
   el(rid,'.enabled').checked = !!cfg.enabled;
+  el(rid,'.weekdays').checked = (cfg.weekdays_only!==false);
   el(rid,'.pause_until').value = cfg.pause_until||'';
   el(rid,'.subject').value = cfg.subject||'';
 }
@@ -268,7 +273,8 @@ function statusLine(rid){
   const s=el(rid,'.statusline');
   const act=(cfg.recipients||[]).filter(r=>r.active).length;
   const horas=(cfg.send_times||[]).join(', ') || '—';
-  let txt = cfg.enabled ? `Envío ACTIVO a las ${horas} · ${act} destinatario(s) activo(s).` : "Envío DESACTIVADO.";
+  const dias = (cfg.weekdays_only!==false) ? 'L–V' : 'todos los días';
+  let txt = cfg.enabled ? `Envío ACTIVO (${dias}) a las ${horas} · ${act} destinatario(s) activo(s).` : "Envío DESACTIVADO.";
   if(cfg.pause_until) txt += ` En pausa hasta ${cfg.pause_until}.`;
   s.textContent=txt;
 }
@@ -280,6 +286,7 @@ async function post(rid,cfg){
 function collect(rid){
   const cfg=STATE[rid];
   cfg.enabled=el(rid,'.enabled').checked;
+  cfg.weekdays_only=el(rid,'.weekdays').checked;
   cfg.pause_until=el(rid,'.pause_until').value||null;
   cfg.subject=el(rid,'.subject').value;
 }
