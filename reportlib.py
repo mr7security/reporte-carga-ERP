@@ -42,9 +42,13 @@ def footer(dash_url):
     )
 
 
-def document(title, body, *, full=True, now=None, srv=None, dash_url="http://10.50.69.121:8070"):
+def document(title, body, *, full=True, now=None, srv=None,
+             dash_url="http://10.50.69.121:8070", width=1140):
     """Compone el documento: cabecera + cuerpo + pie.
-    full=True -> HTML completo (email). full=False -> fragmento (visor del dashboard)."""
+    full=True -> HTML completo (email). full=False -> fragmento (visor del dashboard).
+    width = ancho FIJO de la tarjeta en px, ajustado al ancho de las tablas del reporte.
+    La tarjeta debe envolver a la tabla (no 100%): si fuera más estrecha, la tabla se
+    desbordaría por la derecha en el móvil; con ancho fijo, Outlook escala el bloque entero."""
     now = now or dt.datetime.now()
     inner = f'{header(title, now, srv)}{body}{footer(dash_url)}'
     if not full:
@@ -52,6 +56,6 @@ def document(title, body, *, full=True, now=None, srv=None, dash_url="http://10.
     return (f'<!doctype html><html><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
             f'<body style="margin:0;padding:12px;background:#f0f0f0;">'
-            f'<div style="max-width:1150px;width:100%;margin:auto;background:#fff;padding:16px;border:1px solid {BORDER};">'
+            f'<div style="width:{width}px;margin:auto;background:#fff;padding:16px;border:1px solid {BORDER};">'
             f'{inner}'
             f'</div></body></html>')

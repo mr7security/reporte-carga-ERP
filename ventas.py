@@ -115,4 +115,4 @@ def build_html(data, full=True):
 
     dash_url = core.env("DASHBOARD_URL", "http://10.50.69.121:8070")
     return reportlib.document("Ventas (Alb)", body, full=full,
-                              now=now, srv=srv, dash_url=dash_url)
+                              now=now, srv=srv, dash_url=dash_url, width=760)

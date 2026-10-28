@@ -286,8 +286,9 @@ def build_html(data, full=True, datos_act=None):
                      else now.strftime("%d/%m/%Y %H:%M:%S"))
     tables = _tables(data, datos_act)
     dash_url = env("DASHBOARD_URL", "http://10.50.69.121:8070")
+    # tarjeta = ancho de la tabla + relleno (16*2) + borde (1*2)
     return reportlib.document("Previsión de Carga", tables, full=full,
-                              now=now, srv=srv, dash_url=dash_url)
+                              now=now, srv=srv, dash_url=dash_url, width=TABLE_W + 34)
 
 # ---------------------------------------------------------------------------
 # Envío
