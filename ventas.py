@@ -93,14 +93,14 @@ def build_html(data, full=True):
     n = data.get("n") or 0
 
     GREEN = core.GREEN
-    # celda de total grande y en negrita
+    # celda de total grande y en negrita (tamaño contenido para que quepa en móvil)
     def big(txt):
         return (f'<td style="background:#ffffff;color:#1f2937;border:1px solid {reportlib.BORDER};'
-                f'padding:12px 10px;font:bold 20px Segoe UI,Arial;text-align:center;'
+                f'padding:10px 8px;font:bold 16px Segoe UI,Arial;text-align:center;'
                 f'white-space:nowrap;font-variant-numeric:tabular-nums;">{txt}</td>')
 
     body = (
-        '<table width="100%" style="border-collapse:collapse;margin:0 auto 12px;width:100%;max-width:720px;">'
+        '<table width="100%" style="border-collapse:collapse;margin:0 auto 12px;width:100%;max-width:560px;">'
         + '<tr>' + core.th(f"Ventas del día &middot; {fecha}", GREEN, span=3) + '</tr>'
         + '<tr>'
         + core.th("Cantidad", GREEN)
@@ -115,4 +115,4 @@ def build_html(data, full=True):
 
     dash_url = core.env("DASHBOARD_URL", "http://10.50.69.121:8070")
     return reportlib.document("Ventas (Alb)", body, full=full,
-                              now=now, srv=srv, dash_url=dash_url, width=760)
+                              now=now, srv=srv, dash_url=dash_url, width=620)
